@@ -6,6 +6,50 @@
 #include <rosutil/rosutil.hpp>
 #include <math.h>
 #include <sstream>
+#include <vector> 
+#include <string>
+
+
+class node{
+private:
+	int ref;
+	std::vector<node> nodes;
+	float x;
+	float y;
+	std::string label;
+public:
+	node(int _ref,float _x,float _y){
+		ref = _ref;
+		x = _x;
+		y = _y;
+		label = "";
+	}
+	
+	void setLabel(std::string obj){
+		label = obj;
+	}
+	
+	void addNode(node ny){
+		nodes.push_back(ny);
+	}
+	
+	std::string getLabel(){
+		return label;
+	}
+	
+	node getNode(int i){
+		//if(i<nodes.size()){
+		return nodes.at(i);
+		//}
+		/*else{
+			return Null;
+		}*/
+	}
+	
+	int size(){
+		return nodes.size();
+	}
+};
 
 class navigator{
 public:
