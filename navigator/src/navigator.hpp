@@ -37,6 +37,14 @@ public:
 		return label;
 	}
 	
+	float getX(){
+		return x;
+	}
+	
+	float getY(){
+		return y;
+	}
+	
 	node getNode(int i){
 		//if(i<nodes.size()){
 		return nodes.at(i);
