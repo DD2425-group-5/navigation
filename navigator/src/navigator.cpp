@@ -116,9 +116,29 @@ void navigator::calculatePID(){
 	//PIDcontrol_right_prev = PIDcontrol_right;
 }
 
+/*
+ * construct the topological map and 
+ */
 void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 	int size = msg.list.size();
-	std::vector<node> nodes;
+	//node nodes;
+	for(int i=0;i<size;i++){	//create nodes
+		mapping_msgs::Node tmp = msg.list[i];
+		node tmpN(tmp.ref,tmp.x,tmp.y);
+		if(tmp.object){
+			tmpN.setLabel(tmp.label);
+		}
+		nodes.push_back(tmpN);
+	}
+	for(int i=0;i<size;i++){
+		mapping_msgs::Node tmp = msg.list[i];
+		int son = tmp.links.size();
+		for(int j = 0 ;j < son;j++){
+			int ref = tmp.links[j];
+			nodes.at(i).addNode(nodes.at(ref));
+		}
+	}
+	currentNode = nodes.at(0);
 }
 
 navigator::navigator(int argc, char *argv[]){

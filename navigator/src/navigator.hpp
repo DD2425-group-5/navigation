@@ -19,16 +19,26 @@ private:
 	float x;
 	float y;
 	std::string label;
+	int object;
 public:
+	node(){
+	
+	}
 	node(int _ref,float _x,float _y){
 		ref = _ref;
 		x = _x;
 		y = _y;
 		label = "";
+		object = 0;
 	}
 	
 	void setLabel(std::string obj){
 		label = obj;
+		object = 1;
+	}
+	
+	int hasObject(){
+		return object;
 	}
 	
 	void addNode(node ny){
@@ -74,6 +84,9 @@ private:
     double x;                       // Linear x
     double y;                       // Angular y
     double z;                       // Angular z
+	
+	std::vector<node> nodes;		//All nodes just in case
+	node currentNode;				//Node your at
 
     /* From paramsnav*/
     double GP_left;
