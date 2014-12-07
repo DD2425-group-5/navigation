@@ -1,8 +1,0 @@
-<launch>
-
-	<rosparam file="$(find navigator)/config/paramsnav.yaml" command="load"/>
-	<include file="$(find ir_sensors)/launch/ir_sensors.launch"/>
-	<include file="$(find odometry)/launch/odometry.launch"/>
-	<node name="navigation" pkg="navigation" type="navigation" output="screen"/>
-
-</launch>
