@@ -88,17 +88,7 @@ private:
 	std::vector<node> nodes;		//All nodes just in case
 	node currentNode;				//Node your at
 
-    /* From paramsnav*/
-    double GP_left;
-    double GI_left;
-    double GD_left;
-    double Gcontr_left;
-    double setpoint_left;
-    double GP_right;
-    double GI_right;
-    double GD_right;
-    double Gcontr_right;
-    double setpoint_right;
+    /* asdsadasd*/
     float contr_time;
     float contr_freq;
     int freq;                       // Operating frequency
@@ -106,38 +96,21 @@ private:
 
     double angvel_left;
     double angvel_right;
-    
-    double err_left;
-    double err_left_prev;
-    double err_right;
-    double err_right_prev;
-
-    double Pcontrol_left;
-	double Icontrol_left;
-	double Dcontrol_left;
-	double Pcontrol_right;
-	double Icontrol_right;
-	double Dcontrol_right;
-	double Pcontrol_left_prev;
-	double Icontrol_left_prev;
-	double Dcontrol_left_prev;
-	double Pcontrol_right_prev;
-	double Icontrol_right_prev;
-	double Dcontrol_right_prev;
-	double PIDcontrol_left;
-	double PIDcontrol_left_prev;
-	double PIDcontrol_right;
-    double PIDcontrol_right_prev;
-
+    double Gp;
+    double headingErr;
+    double referenceAngle;
+    double turningControl;
+    double referenceHeadingY;
+    double referenceHeadingX;
+ 
 
     void runNode();
-    void avoidWall();
-    void nodeTracker();
     void sensorCallback(const hardware_msgs::IRDists msg1);
     void odometryCallback(const hardware_msgs::Odometry msg2);
 	void topologicalCallback(const mapping_msgs::NodeList msg);
     //void poseCallback(const geometry_msgs::PoseStamped msg3);
-    void calculatePID();
+    void calculateP();
+    void calculateReferenceHeading();
     
     
     ros::Publisher pub_motor;       // Publish to motor controller

@@ -1,22 +1,11 @@
-controllernav: {
-
-#Parameters for PID in navigation
-
-GP_left: 11.25,
-GI_left: 0.0,
-GD_left: 0.0,
-Gcontr_left: 0.0,
-setpoint_left: 0.0,
-
-GP_right: 0.0,
-GI_right: 0.0,
-GD_right: 0.0,
-Gcontr_right: 0.0,
-setpoint_right: 0.0,
-
-contr_time: 0.02,
-contr_freq: 50.0,
-
-freq = 50.0,
-linearSpeed = 0.2
+controllernav: { 
+  Gp: 1.0
+  Gi: 0.0,
+  Gd: 0.0,
+  Gc: 0.0,
+  control_freq: 50,
+  control_time: 0.02,
+  satMin: 40.0,
+  satMax: 150.0,
+  linearSpeed: 0.2
 }
