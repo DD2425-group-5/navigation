@@ -8,6 +8,8 @@
 #include <sstream>
 #include <vector> 
 #include <string>
+#include "mapping_msgs/Node.h"
+#include "mapping_msgs/NodeList.h"
 
 
 class node{
@@ -120,6 +122,7 @@ private:
     void nodeTracker();
     void sensorCallback(const hardware_msgs::IRDists msg1);
     void odometryCallback(const hardware_msgs::Odometry msg2);
+	void topologicalCallback(const mapping_msgs::NodeList msg);
     //void poseCallback(const geometry_msgs::PoseStamped msg3);
     void calculatePID();
     
@@ -128,4 +131,5 @@ private:
     ros::Subscriber sub_sensor;     // Subscribe to sensors
     ros::Subscriber sub_odometry;   // Subscribe to odometry
     ros::Subscriber sub_pose;       // Subscribe to pose in odometry
+	ros::Subscriber sub_map;		// Subscribe to topological map
 };

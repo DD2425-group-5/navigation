@@ -116,6 +116,11 @@ void navigator::calculatePID(){
 	//PIDcontrol_right_prev = PIDcontrol_right;
 }
 
+void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
+	int size = msg.list.size();
+	std::vector<node> nodes;
+}
+
 navigator::navigator(int argc, char *argv[]){
 	ros::init(argc, argv, "navigator");	    // Name of node
 	ros::NodeHandle n;					        // n = the handle
@@ -170,6 +175,7 @@ navigator::navigator(int argc, char *argv[]){
     pub_motor = n.advertise<geometry_msgs::Twist>("/motor3/twist", 1000);
     sub_sensor = n.subscribe("/ir_sensors/dists", 1000, &navigator::sensorCallback, this);
     sub_odometry = n.subscribe("/odometry/odometry", 1000, &navigator::odometryCallback, this);
+	sub_map = n.subscribe("/map/map", 1000, &navigator::topologicalCallback, this);
     //sub_pose = n.subscribe("/odometry/pose", 1000, &navigator::poseCallback, this);
 
 	runNode();
