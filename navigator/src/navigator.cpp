@@ -139,23 +139,26 @@ navigator::navigator(int argc, char *argv[]){
     
     referenceHeadingY = 0.0;
     referenceHeadingX = 0.0;
-
-
-    angvel_left = 0.0;
-    angvel_right = 0.0;
-
     headingErr = 0.0;
     referenceAngle = 0.0;
     turningControl = 0.0;
     referenceHeadingY = 0.0;
     referenceHeadingX = 0.0;
 
-    pub_motor = n.advertise<geometry_msgs::Twist>("/motor3/twist", 1000);
-    sub_sensor = n.subscribe("/ir_sensors/dists", 1000, &navigator::sensorCallback, this);
-
-	sub_map = n.subscribe("/topological_map/map", 1000, &navigator::topologicalCallback, this);
+    /* publish and subscribe properly*/
     std::string odometry_pub_topic;
     ROSUtil::getParam(n, "/topic_list/hardware_topics/odometry/published/odometry_topic", odometry_pub_topic);
+    std::string motor3_pub_topic;
+    ROSUtil::getParam(n, "/topic_list/controller_topics/motor3/subscribed/twist_topic", motor3_pub_topic);
+    std::string ir_pub_topic;
+    ROSUtil::getParam(n, "/topic_list/hardware_topics/ir_sensors/published/ir_distance_topic", ir_pub_topic);
+    sub_sensor = n.subscribe("/ir_sensors/dists", 1000, &navigator::sensorCallback, this); 
+    
+    
+    
+    pub_motor = n.advertise<geometry_msgs::Twist>( motor3_pub_topic, 1000);
+    sub_sensor = n.subscribe(ir_pub_topic, 1000, &navigator::sensorCallback, this);
+    sub_map = n.subscribe("/map/map", 1000, &navigator::topologicalCallback, this);
     sub_odometry = n.subscribe(odometry_pub_topic, 1000, &navigator::odometryCallback, this);
     //sub_pose = n.subscribe("/odometry/pose", 1000, &navigator::poseCallback, this);
 
