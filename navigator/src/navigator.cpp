@@ -61,11 +61,19 @@ void navigator::calculateReferenceHeading(){
 
 }
 
+void navigator::bfsSearch(std::string obj){
+	int pres = current;
+	
+}
 
 /*
  * construct the topological map and 
  */
 void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
+	map = msg;
+	current = 0;
+	ROS_INFO("GOT A MAP");
+	
 	int size = msg.list.size();
 	//node nodes;
 	for(int i=0;i<size;i++){	//create nodes
@@ -73,10 +81,11 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 		node tmpN(tmp.ref,tmp.x,tmp.y);
 		if(tmp.object){
 			tmpN.setLabel(tmp.label);
+			objects.push_back(tmp.label);
 		}
-		nodes.push_back(tmpN);
+		//nodes.push_back(tmpN);
 	}
-	for(int i=0;i<size;i++){
+	/*for(int i=0;i<size;i++){
 		mapping_msgs::Node tmp = msg.list[i];
 		int son = tmp.links.size();
 		for(int j = 0 ;j < son;j++){
@@ -84,7 +93,7 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 			nodes.at(i).addNode(nodes.at(ref));
 		}
 	}
-	currentNode = nodes.at(0);
+	currentNode = nodes.at(0);*/
 }
 
 
@@ -100,7 +109,8 @@ navigator::navigator(int argc, char *argv[]){
 	ros::init(argc, argv, "navigator");	    // Name of node
 	ros::NodeHandle n;					        // n = the handle
 
-    
+	freq = 50;
+	
     ROSUtil::getParam(n, "/controllernav/Gp", Gp);
 	/*ROSUtil::getParam(n, "/controllernav/GI_left", GI_left);
 	ROSUtil::getParam(n, "/controllernav/GD_left", GD_left);
@@ -111,9 +121,9 @@ navigator::navigator(int argc, char *argv[]){
 	ROSUtil::getParam(n, "/controllernav/GD_right", GD_right);
 	ROSUtil::getParam(n, "/controllernav/Gcontr_right", Gcontr_right);
   	ROSUtil::getParam(n, "/controllernav/setpoint_right", setpoint_right);*/
-	ROSUtil::getParam(n, "/controllernav/contr_freq", contr_freq);
-	ROSUtil::getParam(n, "/controllernav/contr_time", contr_time);
-    ROSUtil::getParam(n, "/controllernav/freq", freq);
+	ROSUtil::getParam(n, "/controllernav/control_freq", contr_freq);
+	ROSUtil::getParam(n, "/controllernav/control_time", contr_time);
+    //ROSUtil::getParam(n, "/controllernav/freq", freq);
     ROSUtil::getParam(n, "/controllernav/linearSpeed", linearSpeed);    
 
 
@@ -138,7 +148,7 @@ navigator::navigator(int argc, char *argv[]){
     pub_motor = n.advertise<geometry_msgs::Twist>("/motor3/twist", 1000);
     sub_sensor = n.subscribe("/ir_sensors/dists", 1000, &navigator::sensorCallback, this);
 
-	sub_map = n.subscribe("/map/map", 1000, &navigator::topologicalCallback, this);
+	sub_map = n.subscribe("/topological_map/map", 1000, &navigator::topologicalCallback, this);
     std::string odometry_pub_topic;
     ROSUtil::getParam(n, "/topic_list/hardware_topics/odometry/published/odometry_topic", odometry_pub_topic);
     sub_odometry = n.subscribe(odometry_pub_topic, 1000, &navigator::odometryCallback, this);

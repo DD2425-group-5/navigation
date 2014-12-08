@@ -85,6 +85,10 @@ private:
     double y;                       // Angular y
     double z;                       // Angular z
 	
+	mapping_msgs::NodeList map;		//the top map
+	int current;					//node robots at
+	std::vector<std::string> objects;	//a list of all objects
+	
 	std::vector<node> nodes;		//All nodes just in case
 	node currentNode;				//Node your at
 
@@ -111,7 +115,7 @@ private:
     //void poseCallback(const geometry_msgs::PoseStamped msg3);
     void calculateP();
     void calculateReferenceHeading();
-    
+    void bfsSearch(std::string obj);
     
     ros::Publisher pub_motor;       // Publish to motor controller
     ros::Subscriber sub_sensor;     // Subscribe to sensors

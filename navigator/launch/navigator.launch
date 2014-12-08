@@ -1,5 +1,5 @@
 <launch>
-
+	<rosparam file="$(find project_launch)/config/topic_names.yaml" command="load" />
 	<rosparam file="$(find navigator)/config/paramsnav.yaml" command="load"/>
 	<include file="$(find ir_sensors)/launch/ir_sensors.launch"/>
 	<!--include file="$(find odometry)/launch/odometry.launch"/-->
