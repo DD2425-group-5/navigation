@@ -63,7 +63,12 @@ void navigator::calculateReferenceHeading(){
 
 void navigator::bfsSearch(std::string obj){
 	int pres = current;
-	
+	int size = map.list.size();
+	//int res[size];
+	for(int i=0;i<size;i++){
+		//res[i] = i;
+		path[i] = i;
+	}
 }
 
 /*

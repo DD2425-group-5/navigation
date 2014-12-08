@@ -88,6 +88,7 @@ private:
 	mapping_msgs::NodeList map;		//the top map
 	int current;					//node robots at
 	std::vector<std::string> objects;	//a list of all objects
+	int path[];
 	
 	std::vector<node> nodes;		//All nodes just in case
 	node currentNode;				//Node your at
