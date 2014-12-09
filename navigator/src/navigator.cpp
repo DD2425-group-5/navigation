@@ -71,6 +71,51 @@ void navigator::bfsSearch(std::string obj){
 	}
 }
 
+void navigator::breadthFirstSearch(int origin, int target){
+    std::queue<std::pair<int,int> > Q;      // Create a queue Q
+    std::map<int,int> V;                    // Create a vector V
+    //std::vector<int> P;                   // Create a vector P
+    path.clear();
+    std::vector<int>& P = path;             // Created an alias for path
+    Q.push(std::pair<int,int>(origin,-1));  // Start at origin node
+    
+    //map.list[].object;
+    
+    
+    while(!Q.empty()){
+        std::pair<int, int> nextInQ = Q.front();
+        V[nextInQ.first] = nextInQ.second;                          // Add the first value in Q to vector V
+        Q.pop();                                                    // Remove first value from Q
+        
+        if(nextInQ.first == target){
+            break;
+        }
+
+        int linkedNodes = map.list[nextInQ.first].links.size();     // Amount of neighbouring nodes that current node has
+        
+        for(int i=0; i<linkedNodes; i++){
+            if(!map.list[map.list[nextInQ.first].links[i]].object && 
+                V.find(map.list[nextInQ.first].links[i]) == V.end()){
+                Q.push(std::pair<int, int>(map.list[nextInQ.first].links[i], nextInQ.first));       // Push neighbour nodes to Q
+            }
+        }
+    }
+
+    int j = target;
+    P.push_back(j);
+  
+    while(1){
+        j = V[j];
+        P.push_back(j);
+
+        if(j == origin){
+            break;
+        }
+    }
+
+    std::reverse(P.begin(), P.end());              // Returns the shortest path from origin node to target node
+}
+
 /*
  * construct the topological map and 
  */

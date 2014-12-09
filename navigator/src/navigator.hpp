@@ -8,6 +8,10 @@
 #include <sstream>
 #include <vector> 
 #include <string>
+#include <queue>
+#include <utility>
+#include <map>
+#include <algorithm>
 #include "mapping_msgs/Node.h"
 #include "mapping_msgs/NodeList.h"
 
@@ -88,10 +92,10 @@ private:
 	mapping_msgs::NodeList map;		//the top map
 	int current;					//node robots at
 	std::vector<std::string> objects;	//a list of all objects
-	int path[];
-	
+	std::vector<int> path;
+
 	std::vector<node> nodes;		//All nodes just in case
-	node currentNode;				//Node your at
+	//node currentNode;				//Node your at
 
     /* asdsadasd*/
     float contr_time;
@@ -117,6 +121,7 @@ private:
     void calculateP();
     void calculateReferenceHeading();
     void bfsSearch(std::string obj);
+    void breadthFirstSearch(int origin, int target); // Calculates the shortest distance from current node (origin) to target node (target)
     
     ros::Publisher pub_motor;       // Publish to motor controller
     ros::Subscriber sub_sensor;     // Subscribe to sensors
