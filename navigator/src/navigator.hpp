@@ -81,7 +81,7 @@ public:
 	navigator(int argc, char *argv[]);
 
 private:
-    double sensor[6];               // Latest sensor data
+    double sensor[5];               // Latest sensor data
     double absX;                    // Absolute value of X                    
     double absY;                    // Absolute value of Y
     double theta;                   // Heading, angular

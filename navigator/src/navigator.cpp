@@ -7,7 +7,7 @@ void navigator::runNode(){
 
 
        
-         geometry_msgs::Twist followHeading;
+        geometry_msgs::Twist followHeading;
         followHeading.linear.x = currentLinearSpeed;
         followHeading.angular.y = turnAngle;
         followHeading.angular.z = turningControl;
@@ -130,6 +130,11 @@ void navigator::bfsSearch(std::string obj){
 
 
 void navigator::breadthFirstSearch(int origin, int target){
+    if(map.list[target].object){
+        ROS_INFO("THE TARGET IS AN OBJECT!! CHOOSE ANOTHER TARGET!");
+        return;
+    }
+
     std::queue<std::pair<int,int> > Q;      // Create a queue Q
     std::map<int,int> V;                    // Create a vector V
     //std::vector<int> P;                   // Create a vector P
@@ -149,9 +154,10 @@ void navigator::breadthFirstSearch(int origin, int target){
             break;
         }
 
-        int linkedNodes = map.list[nextInQ.first].links.size();     // Amount of neighbouring nodes that current node has
+        int linkedNodes = map.list[nextInQ.first].links.size(); // Amount of neighbouring nodes that current node has
         
         for(int i=0; i<linkedNodes; i++){
+            //int linkedNode = map.list[nextInQ.first].links[i];      // Node [i] that links to current node
             if(!map.list[map.list[nextInQ.first].links[i]].object && 
                 V.find(map.list[nextInQ.first].links[i]) == V.end()){
                 Q.push(std::pair<int, int>(map.list[nextInQ.first].links[i], nextInQ.first));       // Push neighbour nodes to Q
@@ -172,7 +178,6 @@ void navigator::breadthFirstSearch(int origin, int target){
     }
 
     std::reverse(P.begin(), P.end());              // Returns the shortest path from origin node to target node
-
 }
 
 void navigator::fakeMap(){ //not used
@@ -230,7 +235,7 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 	currentNode = nodes.at(0);*/
 	
 	
-	navigator::breadthFirstSearch(0, 5); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	navigator::breadthFirstSearch(0, 2); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 //put into callback instead
 }
 
