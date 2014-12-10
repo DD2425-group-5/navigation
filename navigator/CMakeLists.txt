@@ -7,16 +7,17 @@ find_package(catkin REQUIRED COMPONENTS
   ras_arduino_msgs
   rosutil
   hardware_msgs
+  mathutil
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES navigation
-#  CATKIN_DEPENDS roscpp std_msgs
+#  CATKIN_DEPENDS roscpp std_msgs 
 #  DEPENDS system_lib
 
   DEPENDS orocos_kdl
-  CATKIN_DEPENDS roscpp std_msgs ras_arduino_msgs rosutil hardware_msgs
+  CATKIN_DEPENDS roscpp std_msgs ras_arduino_msgs rosutil hardware_msgs mathutil
   INCLUDE_DIRS
 )
 
@@ -25,6 +26,6 @@ include_directories(
 )
 
 add_executable(navigator src/navigator.cpp)
-target_link_libraries(navigator ${catkin_LIBRARIES} rosutil)
+target_link_libraries(navigator ${catkin_LIBRARIES} rosutil mathutil)
 add_dependencies(navigator ${catkin_EXPORTED_TARGETS})
 

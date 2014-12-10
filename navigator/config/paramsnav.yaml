@@ -1,5 +1,5 @@
 controllernav: { 
-  Gp: 1.0,
+  Gp: 0.2,
   Gi: 0.0,
   Gd: 0.0,
   Gc: 0.0,
@@ -7,5 +7,5 @@ controllernav: {
   control_time: 0.02,
   satMin: 40.0,
   satMax: 150.0,
-  linearSpeed: 0.2
+  linearSpeed: 0.25
 }

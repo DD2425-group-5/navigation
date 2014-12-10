@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "mapping_msgs/Node.h"
 #include "mapping_msgs/NodeList.h"
+#include "mathutil/mathutil.hpp"
 
 
 class node{
@@ -100,9 +101,10 @@ private:
     /* asdsadasd*/
     float contr_time;
     float contr_freq;
-    int freq;                       // Operating frequency
+    int freq;
+    int ready;                      // Operating frequency
     double linearSpeed;
-
+    int nodeNumber;
     double angvel_left;
     double angvel_right;
     double Gp;
@@ -111,6 +113,12 @@ private:
     double turningControl;
     double referenceHeadingY;
     double referenceHeadingX;
+    double currentLinearSpeed;
+    int state;
+    int timer;
+    int cheat;
+    int node_num;
+    float turnAngle;
  
 
     void runNode();
@@ -122,10 +130,13 @@ private:
     void calculateReferenceHeading();
     void bfsSearch(std::string obj);
     void breadthFirstSearch(int origin, int target); // Calculates the shortest distance from current node (origin) to target node (target)
+
+    void advanceNode();
     
     ros::Publisher pub_motor;       // Publish to motor controller
     ros::Subscriber sub_sensor;     // Subscribe to sensors
     ros::Subscriber sub_odometry;   // Subscribe to odometry
     ros::Subscriber sub_pose;       // Subscribe to pose in odometry
 	ros::Subscriber sub_map;		// Subscribe to topological map
+	void fakeMap();
 };

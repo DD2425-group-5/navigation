@@ -6,18 +6,20 @@ void navigator::runNode(){
 	while (ros::ok()){
 
 
-        geometry_msgs::Twist followHeading;   // For controlling the motor
-
-        followHeading.linear.x = linearSpeed;
-        followHeading.angular.y = 0.0;
+       
+         geometry_msgs::Twist followHeading;
+        followHeading.linear.x = currentLinearSpeed;
+        followHeading.angular.y = turnAngle;
         followHeading.angular.z = turningControl;
         
         pub_motor.publish(followHeading);
+        ROS_INFO("Ready? [%d]", ready);
         
-        
-        
+        if (ready){
+        ROS_INFO("YES! So, calling calcuateReferenceHeading");
         navigator::calculateReferenceHeading();
-        navigator::calculateP();
+        
+        }
 		ros::spinOnce();
 		loop_rate.sleep();
 		
@@ -26,14 +28,15 @@ void navigator::runNode(){
 }
 
 
-
-
 void navigator::sensorCallback(const hardware_msgs::IRDists msg1){
 	float tmp1[] = {msg1.s0, msg1.s1, msg1.s2, msg1.s3, msg1.s4, msg1.s5};
 	
     for(int i=0; i<6; i++){
 		sensor[i] = tmp1[i];
 	}
+
+  //  std::pair<float, float> rotateAroundOrigin(float x, float y, float angle)
+
 }
 
 
@@ -44,22 +47,76 @@ void navigator::odometryCallback(const hardware_msgs::Odometry msg2){
     theta = msg2.latestHeading;
 }
 
-/*void navigator::poseCallback(const geometry_msgs::PoseStamped msg3){
-
-}*/
-
-
-
 
 void navigator::calculateReferenceHeading(){
-    referenceAngle = atan2(referenceHeadingY, referenceHeadingX);
+  
+  
+  for (int i =0; i<path.size();i++){
+   ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
+  
+  }
+  
+   /*
+    if(nodeNumber<=path.size()-1){
+        node_num = path[nodeNumber];
+    }
+    else{
+        node_num = node_num;
+    }
+    
+    ROS_INFO("Going to node [%d], #%d of the list", node_num, nodeNumber);
+    */
+    mapping_msgs::Node nextTarget = map.list[nodeNumber];//node_num];
+    ROS_INFO("Going to node [%d]", nodeNumber);
+    referenceHeadingX = nextTarget.x;
+    referenceHeadingY = nextTarget.y;
+    float euclidDistance = sqrt( pow(referenceHeadingX-absX, 2) + pow(referenceHeadingY-absY, 2));
+    referenceAngle = atan2(referenceHeadingY-absY, referenceHeadingX-absX);
     headingErr = referenceAngle - theta;
+    
+    if (euclidDistance > 0.04){
+        currentLinearSpeed = linearSpeed;
+        navigator::calculateP();
+        
+        if (state ==2 && timer >200){
+            timer = 0;
+            cheat = 0;
+            state = 1; //if it was turning, it is folowing now
+            ROS_INFO ("changing state to 1, timer = %d", timer);
+            }
+    }
+    else{
+        nodeNumber++;
+        ROS_INFO ("Incrementing node number to %d", nodeNumber);
+        currentLinearSpeed = 0;
+        if (state ==1){
+            state = 2; //if it was folowing, it is turning now
+            ROS_INFO ("changing state to 2");
+        }        
+    }
+    
 
-    // test
-    //theta = 80 *M_PI/180.0;
-    //ROS_INFO("theta = 80deg-atan2=%f",theta - atan2(5.6713, 1));
+    if (state ==1){ //if following listen to the p controller
+        ROS_INFO ("State is 1, seek&destroy");
+        turnAngle = 0.0;
+     }
+    
+    else if (state ==2){ //if turning just turn to the error angle
+        
+        cheat++;
+        timer++;
+        if (state ==2 && cheat ==2){
+            turnAngle = headingErr*180.0/M_PI;
+            }
+        ROS_INFO ("State is 2, precision turn at %f deg, timer is %d", turnAngle, timer);
+        
+    }
+    
+    // debug
+    ROS_INFO("target: X[%f] Y[%f], current: X[%f] Y[%f]\nreference[%f]-theta[%f]=%f\n Euclid Disytance to target: [%f]",referenceHeadingX,referenceHeadingY,absX,absY, referenceAngle,theta,  referenceAngle-theta, euclidDistance);
 
 }
+
 
 void navigator::bfsSearch(std::string obj){
 	int pres = current;
@@ -70,6 +127,7 @@ void navigator::bfsSearch(std::string obj){
 		path[i] = i;
 	}
 }
+
 
 void navigator::breadthFirstSearch(int origin, int target){
     std::queue<std::pair<int,int> > Q;      // Create a queue Q
@@ -114,14 +172,40 @@ void navigator::breadthFirstSearch(int origin, int target){
     }
 
     std::reverse(P.begin(), P.end());              // Returns the shortest path from origin node to target node
+
+}
+
+void navigator::fakeMap(){ //not used
+    mapping_msgs::Node tmp;
+    tmp.x = 0.0;
+    tmp.y = 0.0; 
+    map.list.push_back(tmp);
+   
+    tmp.x = 0.3;
+    tmp.y = 0.0; 
+map.list.push_back(tmp);
+  
+    tmp.x = 0.3;
+    tmp.y = 0.2; 
+map.list.push_back(tmp);
+    
+    tmp.x = 0.0;
+    tmp.y = 0.2; 
+map.list.push_back(tmp);
+
+ready = 1;
+    
+
 }
 
 /*
  * construct the topological map and 
  */
 void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
+    ready=1;
 	map = msg;
 	current = 0;
+	
 	ROS_INFO("GOT A MAP");
 	
 	int size = msg.list.size();
@@ -144,6 +228,10 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 		}
 	}
 	currentNode = nodes.at(0);*/
+	
+	
+	navigator::breadthFirstSearch(0, 5); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+//put into callback instead
 }
 
 
@@ -160,7 +248,9 @@ navigator::navigator(int argc, char *argv[]){
 	ros::NodeHandle n;					        // n = the handle
 
 	freq = 50;
-	
+	ready=0;
+	state = 1;
+	timer = 0;
     ROSUtil::getParam(n, "/controllernav/Gp", Gp);
 	/*ROSUtil::getParam(n, "/controllernav/GI_left", GI_left);
 	ROSUtil::getParam(n, "/controllernav/GD_left", GD_left);
@@ -181,6 +271,10 @@ navigator::navigator(int argc, char *argv[]){
     x = 0.0;
     y = 0.0;
     z = 0.0;
+    cheat = 0;
+    turnAngle = 0;
+    nodeNumber = 1;
+    node_num = 0;
     
     referenceHeadingY = 0.0;
     referenceHeadingX = 0.0;
@@ -204,8 +298,9 @@ navigator::navigator(int argc, char *argv[]){
     pub_motor = n.advertise<geometry_msgs::Twist>( motor3_pub_topic, 1000);
     sub_sensor = n.subscribe(ir_pub_topic, 1000, &navigator::sensorCallback, this);
     sub_odometry = n.subscribe(odometry_pub_topic, 1000, &navigator::odometryCallback, this);
-    //sub_pose = n.subscribe("/odometry/pose", 1000, &navigator::poseCallback, this);
-
+    
+    
+      //navigator::fakeMap();
 	runNode();
 }
 
