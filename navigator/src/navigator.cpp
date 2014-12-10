@@ -13,11 +13,11 @@ void navigator::runNode(){
         followHeading.angular.z = turningControl;
         
         pub_motor.publish(followHeading);
-        //ROS_INFO("Ready? [%d]", ready);
+        ROS_INFO("Ready? [%d]", ready);
         
         if (ready){
-        //ROS_INFO("YES! So, calling calcuateReferenceHeading");
-        //navigator::calculateReferenceHeading();
+        ROS_INFO("YES! So, calling calcuateReferenceHeading");
+        navigator::calculateReferenceHeading();
         
         }
 		ros::spinOnce();
@@ -52,7 +52,7 @@ void navigator::calculateReferenceHeading(){
   
   
   for (int i =0; i<path.size();i++){
-   //ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
+   ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
   
   }
   
@@ -170,8 +170,9 @@ void navigator::cbfs(int origin, int target){
 
 void navigator::breadthFirstSearch(int origin, int target){
     if(map.list[target].object){
-        ROS_INFO("THE TARGET IS AN OBJECT!! CHOOSE ANOTHER TARGET!");
-        return;
+        ROS_INFO("DANGER!!! THE TARGETED NODE IS AN OBJECT! PUSHING THE ROBOT TO THE NODE NEXT TO TARGET");
+        target = map.list[target].links[0];
+        //return;
     }
 
     std::queue<std::pair<int,int> > Q;      // Create a queue Q
@@ -274,7 +275,7 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 	currentNode = nodes.at(0);*/
 	
 	
-	navigator::breadthFirstSearch(0, 2); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	navigator::breadthFirstSearch(0, 9); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 //put into callback instead
 }
