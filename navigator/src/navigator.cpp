@@ -13,11 +13,11 @@ void navigator::runNode(){
         followHeading.angular.z = turningControl;
         
         pub_motor.publish(followHeading);
-        ROS_INFO("Ready? [%d]", ready);
+        //ROS_INFO("Ready? [%d]", ready);
         
         if (ready){
-        ROS_INFO("YES! So, calling calcuateReferenceHeading");
-        navigator::calculateReferenceHeading();
+        //ROS_INFO("YES! So, calling calcuateReferenceHeading");
+        //navigator::calculateReferenceHeading();
         
         }
 		ros::spinOnce();
@@ -52,7 +52,7 @@ void navigator::calculateReferenceHeading(){
   
   
   for (int i =0; i<path.size();i++){
-   ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
+   //ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
   
   }
   
@@ -125,6 +125,45 @@ void navigator::bfsSearch(std::string obj){
 	for(int i=0;i<size;i++){
 		//res[i] = i;
 		path[i] = i;
+	}
+}
+
+void navigator::cbfs(int origin, int target){
+	int size = map.list.size();	//size of map
+	int visited[size];			//nodes visited
+	for(int i=0;i < size;i++){
+		visited[i]=-1;
+	}
+	std::vector<int> q;	//queue
+	q.push_back(origin);//push first
+	visited[origin] = origin;
+	while(q.size() > 0){
+		int t = q.at(0);	//get first
+		q.erase(q.begin());	//erase first
+		if(t == target){
+			break;
+		}
+		for(int i=0;i<map.list[t].links.size();i++){
+			int elem = map.list[t].links[i];
+			if(visited[elem] == -1){
+				visited[elem] = t;
+				q.push_back(elem);
+			}
+		}
+	}
+	/*for(int i=0;i < size;i++){
+		ROS_INFO ("path found %d",visited[i]);
+	}*/
+	if(visited[target] != -1){
+		int t = target;
+		while(t!=origin){
+			ROS_INFO ("path found %d",t);
+			t=visited[t];
+		}
+		ROS_INFO ("path found %d",t);
+	}
+	else{
+		ROS_INFO ("no path found");
 	}
 }
 
@@ -236,6 +275,7 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 	
 	
 	navigator::breadthFirstSearch(0, 2); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+
 //put into callback instead
 }
 
