@@ -130,7 +130,8 @@ private:
     void calculateReferenceHeading();
     void bfsSearch(std::string obj);
     void breadthFirstSearch(int origin, int target); // Calculates the shortest distance from current node (origin) to target node (target)
-
+	void cbfs(int origin, int target);
+	
     void advanceNode();
     
     ros::Publisher pub_motor;       // Publish to motor controller
