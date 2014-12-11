@@ -86,6 +86,7 @@ private:
 	int goToNode;
 	float posX;
 	float posY;
+	int turn180;
 	
 	ros::Subscriber sub_sensor;	//sub to get distance values
 	ros::Publisher pub_motor;	//for the motor

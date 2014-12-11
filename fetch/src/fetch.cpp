@@ -38,9 +38,17 @@ void fetch::runNode(){
 			else{
 				tim.wait(50);
 			}
+			if(turn180 == 1){
+				tmpState = U_TURN;
+			}
 			if(tmpState!=state && !stop){		//has the state changed?
 				change++;
 				if(change >= 10){
+					if(turn180){
+						turn180 = 2;
+						posX = 0;
+						posY = 0;
+					}
 					prevState=state;
 					state=tmpState;
 					printState();
@@ -53,7 +61,9 @@ void fetch::runNode(){
 			if(state == FOLLOW_RIGHT_WALL || state == GO_FORTH){
 				scan();
 			}
-			isThere();
+			if(!turn180){
+				isThere();
+			}
 		}
 		
 		geometry_msgs::Twist msg;	//for controlling the motor
@@ -147,18 +157,22 @@ void fetch::scan(){
 }
 
 void fetch::isThere(){
+	mapIsReady = 1;
 	if(mapIsReady){
-		ROS_INFO("x = %f, y = %f",absX,absY);
+		//ROS_INFO("x = %f, y = %f",absX,absY);
 		float x = absX;
 		float y = absY;
-		if(x < posX + 0.05 && x > posX - 0.05){
-			if(y < posY + 0.05 && y > posY - 0.05){
-				stop = 1;
-				prevState=state;
-				state=U_TURN;
-				printState();
-				statep = states[state];
-				change = 0;
+		if(x < posX + 0.1 && x > posX - 0.1){
+			if(y < posY + 0.1 && y > posY - 0.1){
+				//stop = 1;
+				ROS_INFO("x = %f, y = %f",absX,absY);
+				//prevState=state;
+				//state=U_TURN;
+				//printState();
+				//statep = states[state];
+				//change = 0;
+				//(this->*statep)();
+				turn180 = 1;
 			}
 		}
 	}
@@ -546,6 +560,7 @@ fetch::fetch(int argc, char *argv[]){
 	runTime = 0;
 	goToNode = 4;
 	mapIsReady = 0;
+	turn180 = 0;
 	
 	//init state machine
 	states[DONOTHING] = &fetch::donothing;
