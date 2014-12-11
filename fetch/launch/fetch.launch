@@ -1,0 +1,9 @@
+<launch>
+	<rosparam file="$(find complex_explorer)/config/paramswf.yaml" command="load" />
+	<rosparam file="$(find project_launch)/config/topic_names.yaml" command="load" />
+	<rosparam file="$(find project_launch)/config/global_params.yaml" command="load" />
+	<include file = "$(find odometry)/launch/odometry.launch"/>
+	<include file = "$(find motor_controller3)/launch/pcontrol.launch"/>
+	<include file = "$(find ir_sensors)/launch/ir_sensors.launch"/>
+	<node name="complex_explorer" pkg="complex_explorer" type="complex_explorer" output="screen" />
+</launch>
