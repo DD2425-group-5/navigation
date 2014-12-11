@@ -6,19 +6,22 @@ void navigator::runNode(){
 	while (ros::ok()){
 
 
-       
-         geometry_msgs::Twist followHeading;
+        geometry_msgs::Twist followHeading;
         followHeading.linear.x = currentLinearSpeed;
         followHeading.angular.y = turnAngle;
         followHeading.angular.z = turningControl;
         
         pub_motor.publish(followHeading);
-        //ROS_INFO("Ready? [%d]", ready);
+        ROS_INFO("Is map READY? [%d]", mapIsReady);
         
-        if (ready){
-        //ROS_INFO("YES! So, calling calcuateReferenceHeading");
-        //navigator::calculateReferenceHeading();
+        if (mapIsReady){
         
+        
+        ROS_INFO("YES! So, calling calcuateReferenceHeading");
+        navigator::calculateReferenceHeading();
+        
+        ROS_INFO("YES! So, calling mapCorrectionController");
+        navigator::mapCorrectionController();
         }
 		ros::spinOnce();
 		loop_rate.sleep();
@@ -32,11 +35,61 @@ void navigator::sensorCallback(const hardware_msgs::IRDists msg1){
 	float tmp1[] = {msg1.s0, msg1.s1, msg1.s2, msg1.s3, msg1.s4, msg1.s5};
 	
     for(int i=0; i<6; i++){
-		sensor[i] = tmp1[i];
-	}
+		if (tmp1[i]>=0.3){
+		    sensor[i] = 0.3;
+		   // ROS_INFO("Sensor %d is %f, put to max 0.3m", i, sensor[i]);
+		}
+		if(tmp1[i]<=0.04){
+		    sensor[i] = 0.04;
+		    //ROS_INFO("Sensor %d is %f, put to min 0.04m", i, sensor[i]);
+		}
+		else{
+		    sensor[i] = tmp1[i];
+		    //ROS_INFO("Sensor %d is %f, OK!", i, sensor[i]);
+		}
+    }
+		
+	sensorsAreReady = 1;
+}
 
-  //  std::pair<float, float> rotateAroundOrigin(float x, float y, float angle)
 
+void navigator::mapCorrectionController(){
+    if (mapIsReady && sensorsAreReady){
+        
+            if (sensor[0]<collisionAvoidanceTreshold && sensor[2]<collisionAvoidanceTreshold){
+            
+                controlAngle = GpMapCorrection*(sensor[0]-sensor[2]);
+                ROS_INFO("Left wall too close S0,2[%f, %f], adapting with angle %f", sensor[0],sensor[2],controlAngle);
+            }
+            else {
+                if (sensor[1]<collisionAvoidanceTreshold && sensor[3]<collisionAvoidanceTreshold){
+               
+                controlAngle = GpMapCorrection*(sensor[1]-sensor[3]);
+                ROS_INFO("Right wall too close S1,3[%f, %f], adapting with angle %f", sensor[1],sensor[3],controlAngle);
+                }
+                else{ ROS_INFO("Both walls are far away!");}
+            }
+            
+            for(int iter = 0; iter < map.list.size(); iter++){
+                mapping_msgs::Node someNode = map.list[node_num];
+                //make the robot the center of the coodinate system by translation
+               
+                float skewedRelativeX = someNode.x - absX;
+                float skewedRelativeY = someNode.y - absY;
+                
+                
+                MathUtil::Point straightenedCoordinates = MathUtil::rotateAroundOrigin(skewedRelativeX,\
+                                                                                               skewedRelativeY,\
+                                                                                               controlAngle);
+                someNode.x = straightenedCoordinates.x + absX;
+                someNode.y = straightenedCoordinates.y + absY;
+                map.list[iter] = someNode;
+            }
+           
+    }
+    else{
+    ROS_INFO("Map or Sensors *NOT* ready!");
+    }
 }
 
 
@@ -50,14 +103,11 @@ void navigator::odometryCallback(const hardware_msgs::Odometry msg2){
 
 void navigator::calculateReferenceHeading(){
   
-  
-  for (int i =0; i<path.size();i++){
-   //ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", i, path[i],path.size());
-  
-  }
-  
-   /*
-    if(nodeNumber<=path.size()-1){
+
+  /*for(int i =0; i<path.size();i++){
+   ROS_INFO("element [%d] of vector path is [%d], the vector has size %d elements", int(i), int(path[i]),int(path.size()));
+    }*/
+   if(nodeNumber<path.size()){
         node_num = path[nodeNumber];
     }
     else{
@@ -65,9 +115,9 @@ void navigator::calculateReferenceHeading(){
     }
     
     ROS_INFO("Going to node [%d], #%d of the list", node_num, nodeNumber);
-    */
-    mapping_msgs::Node nextTarget = map.list[nodeNumber];//node_num];
-    ROS_INFO("Going to node [%d]", nodeNumber);
+    
+    mapping_msgs::Node nextTarget = map.list[node_num];
+    //ROS_INFO("Going to node [%d]", nodeNumber);
     referenceHeadingX = nextTarget.x;
     referenceHeadingY = nextTarget.y;
     float euclidDistance = sqrt( pow(referenceHeadingX-absX, 2) + pow(referenceHeadingY-absY, 2));
@@ -78,15 +128,21 @@ void navigator::calculateReferenceHeading(){
         currentLinearSpeed = linearSpeed;
         navigator::calculateP();
         
-        if (state ==2 && timer >200){
+        if (state ==2 && timer >150){
             timer = 0;
             cheat = 0;
             state = 1; //if it was turning, it is folowing now
+            latch = 0;
+            ROS_INFO ("latch is set to 0");
             ROS_INFO ("changing state to 1, timer = %d", timer);
             }
     }
     else{
-        nodeNumber++;
+        if(nodeNumber<path.size() && latch == 0){
+            nodeNumber++;
+            latch = 1;
+            ROS_INFO ("latch is set to 1");
+        }                       
         ROS_INFO ("Incrementing node number to %d", nodeNumber);
         currentLinearSpeed = 0;
         if (state ==1){
@@ -118,13 +174,18 @@ void navigator::calculateReferenceHeading(){
 }
 
 
-void navigator::bfsSearch(std::string obj){
+void navigator::bfsSearch(){
+    ROS_INFO("debug1");
 	int pres = current;
+	ROS_INFO("debug2");
 	int size = map.list.size();
+	ROS_INFO("debug3");
 	//int res[size];
 	for(int i=0;i<size;i++){
 		//res[i] = i;
+		
 		path[i] = i;
+		ROS_INFO("debug4: i=%d",i);
 	}
 }
 
@@ -169,6 +230,12 @@ void navigator::cbfs(int origin, int target){
 
 
 void navigator::breadthFirstSearch(int origin, int target){
+    if(map.list[target].object){
+        ROS_INFO("DANGER!!! THE TARGETED NODE IS AN OBJECT! PUSHING THE ROBOT TO THE NODE NEXT TO TARGET");
+        target = map.list[target].links[0];
+        //return;
+    }
+
     std::queue<std::pair<int,int> > Q;      // Create a queue Q
     std::map<int,int> V;                    // Create a vector V
     //std::vector<int> P;                   // Create a vector P
@@ -188,9 +255,10 @@ void navigator::breadthFirstSearch(int origin, int target){
             break;
         }
 
-        int linkedNodes = map.list[nextInQ.first].links.size();     // Amount of neighbouring nodes that current node has
+        int linkedNodes = map.list[nextInQ.first].links.size(); // Amount of neighbouring nodes that current node has
         
         for(int i=0; i<linkedNodes; i++){
+            //int linkedNode = map.list[nextInQ.first].links[i];      // Node [i] that links to current node
             if(!map.list[map.list[nextInQ.first].links[i]].object && 
                 V.find(map.list[nextInQ.first].links[i]) == V.end()){
                 Q.push(std::pair<int, int>(map.list[nextInQ.first].links[i], nextInQ.first));       // Push neighbour nodes to Q
@@ -211,7 +279,6 @@ void navigator::breadthFirstSearch(int origin, int target){
     }
 
     std::reverse(P.begin(), P.end());              // Returns the shortest path from origin node to target node
-
 }
 
 void navigator::fakeMap(){ //not used
@@ -220,19 +287,19 @@ void navigator::fakeMap(){ //not used
     tmp.y = 0.0; 
     map.list.push_back(tmp);
    
-    tmp.x = 0.3;
-    tmp.y = 0.0; 
+    tmp.x = 0.0;
+    tmp.y = 0.3; 
 map.list.push_back(tmp);
   
-    tmp.x = 0.3;
-    tmp.y = 0.2; 
+    tmp.x = 0.2;
+    tmp.y = 0.3; 
 map.list.push_back(tmp);
     
-    tmp.x = 0.0;
-    tmp.y = 0.2; 
+    tmp.x = 0.2;
+    tmp.y = 0.0; 
 map.list.push_back(tmp);
 
-ready = 1;
+mapIsReady = 1;
     
 
 }
@@ -241,7 +308,7 @@ ready = 1;
  * construct the topological map and 
  */
 void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
-    ready=1;
+    mapIsReady=1;
 	map = msg;
 	current = 0;
 	
@@ -269,14 +336,16 @@ void navigator::topologicalCallback(const mapping_msgs::NodeList msg){
 	currentNode = nodes.at(0);*/
 	
 	
-	navigator::breadthFirstSearch(0, 5); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-	cbfs(0,10);
-//put into callback instead
+
+	navigator::breadthFirstSearch(0, 16); //RMOVEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+//put into callback instead?
+   
+
 }
 
 
 void navigator::calculateP(){
-    turningControl = Gp*headingErr; 
+    turningControl = GpTrajectory*headingErr; 
 }
     
 
@@ -288,10 +357,14 @@ navigator::navigator(int argc, char *argv[]){
 	ros::NodeHandle n;					        // n = the handle
 
 	freq = 50;
-	ready=0;
+	mapIsReady = 0;
+	sensorsAreReady = 0;
+	controlAngle = 0.0;
 	state = 1;
 	timer = 0;
-    ROSUtil::getParam(n, "/controllernav/Gp", Gp);
+	ROSUtil::getParam(n, "/controllernav/Gp_map_correction", GpMapCorrection);
+    ROSUtil::getParam(n, "/controllernav/Gp_trajectory", GpTrajectory);
+    ROSUtil::getParam(n, "/controllernav/collision_avoidance_treshold", collisionAvoidanceTreshold);
 	/*ROSUtil::getParam(n, "/controllernav/GI_left", GI_left);
 	ROSUtil::getParam(n, "/controllernav/GD_left", GD_left);
 	ROSUtil::getParam(n, "/controllernav/Gcontr_left", Gcontr_left);
@@ -315,6 +388,7 @@ navigator::navigator(int argc, char *argv[]){
     turnAngle = 0;
     nodeNumber = 1;
     node_num = 0;
+    latch = 0;
     
     referenceHeadingY = 0.0;
     referenceHeadingX = 0.0;
@@ -340,8 +414,7 @@ navigator::navigator(int argc, char *argv[]){
     sub_odometry = n.subscribe(odometry_pub_topic, 1000, &navigator::odometryCallback, this);
     
     
-      //navigator::fakeMap();
-	runNode();
+   	runNode();
 }
 
 int main(int argc, char *argv[]){

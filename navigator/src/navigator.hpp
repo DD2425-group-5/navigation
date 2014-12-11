@@ -81,7 +81,7 @@ public:
 	navigator(int argc, char *argv[]);
 
 private:
-    double sensor[6];               // Latest sensor data
+    double sensor[5];               // Latest sensor data
     double absX;                    // Absolute value of X                    
     double absY;                    // Absolute value of Y
     double theta;                   // Heading, angular
@@ -101,16 +101,21 @@ private:
     /* asdsadasd*/
     float contr_time;
     float contr_freq;
+    int latch;
     int freq;
-    int ready;                      // Operating frequency
+    int mapIsReady;                      // Operating frequency
+    int sensorsAreReady;
     double linearSpeed;
     int nodeNumber;
+    double collisionAvoidanceTreshold;
     double angvel_left;
     double angvel_right;
-    double Gp;
+    double GpTrajectory;
+    double GpMapCorrection;
     double headingErr;
     double referenceAngle;
     double turningControl;
+    double controlAngle;
     double referenceHeadingY;
     double referenceHeadingX;
     double currentLinearSpeed;
@@ -120,7 +125,7 @@ private:
     int node_num;
     float turnAngle;
  
-
+    void mapCorrectionController();
     void runNode();
     void sensorCallback(const hardware_msgs::IRDists msg1);
     void odometryCallback(const hardware_msgs::Odometry msg2);
@@ -128,7 +133,7 @@ private:
     //void poseCallback(const geometry_msgs::PoseStamped msg3);
     void calculateP();
     void calculateReferenceHeading();
-    void bfsSearch(std::string obj);
+    void bfsSearch();
     void breadthFirstSearch(int origin, int target); // Calculates the shortest distance from current node (origin) to target node (target)
 	void cbfs(int origin, int target);
 	

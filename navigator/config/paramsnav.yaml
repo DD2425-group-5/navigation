@@ -1,11 +1,12 @@
 controllernav: { 
-  Gp: 0.2,
-  Gi: 0.0,
-  Gd: 0.0,
-  Gc: 0.0,
+  Gp_trajectory: 0.2,#0.2
+  Gp_map_correction: 0.0,
+  
+  collision_avoidance_treshold: 0.15, #meters
+  
   control_freq: 50,
   control_time: 0.02,
   satMin: 40.0,
   satMax: 150.0,
-  linearSpeed: 0.25
+  linearSpeed: 0.2
 }
