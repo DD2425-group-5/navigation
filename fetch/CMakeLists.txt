@@ -15,9 +15,9 @@ catkin_package(
 #  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 
-  DEPENDS orocos_kdl
-  CATKIN_DEPENDS roscpp std_msgs ras_arduino_msgs rosutil hardware_msgs
-  INCLUDE_DIRS
+  #DEPENDS orocos_kdl
+  #CATKIN_DEPENDS roscpp std_msgs ras_arduino_msgs rosutil hardware_msgs
+  #INCLUDE_DIRS
 )
 
 

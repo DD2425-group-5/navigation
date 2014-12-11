@@ -83,6 +83,10 @@ private:
 	/**/
 	std::vector<std::string> objects;
 	
+	int goToNode;
+	float posX;
+	float posY;
+	
 	ros::Subscriber sub_sensor;	//sub to get distance values
 	ros::Publisher pub_motor;	//for the motor
 	ros::Publisher pub_turning; //for publishing when turning
@@ -103,6 +107,7 @@ private:
 	char action(char sensor_state); //what action should be taken?
 	
 	void printState();	//for debug
+	void isThere();
 	
 	void donothing();	//self explainatory
 	void followleftwallinit();

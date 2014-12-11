@@ -6,6 +6,7 @@ void fetch::runNode(){
 	tim.wait(50);
 	while (ros::ok())			//main loop of this code
 	{
+		ros::spinOnce();
 		//ROS_INFO("STATE = %d", state);
 		if(started){
 			char tmp = currentState();	
@@ -52,6 +53,7 @@ void fetch::runNode(){
 			if(state == FOLLOW_RIGHT_WALL || state == GO_FORTH){
 				scan();
 			}
+			isThere();
 		}
 		
 		geometry_msgs::Twist msg;	//for controlling the motor
@@ -67,7 +69,6 @@ void fetch::runNode(){
 		
 		pub_motor.publish(msg);		//pub to motor
 		
-		ros::spinOnce();
 		loop_rate.sleep();
 	}
 }
@@ -142,6 +143,24 @@ void fetch::scan(){
 	else if(!tmp2 && scanState == 1){
 		scanState = 2;
 		move5 = 0;
+	}
+}
+
+void fetch::isThere(){
+	if(mapIsReady){
+		ROS_INFO("x = %f, y = %f",absX,absY);
+		float x = absX;
+		float y = absY;
+		if(x < posX + 0.05 && x > posX - 0.05){
+			if(y < posY + 0.05 && y > posY - 0.05){
+				stop = 1;
+				prevState=state;
+				state=U_TURN;
+				printState();
+				statep = states[state];
+				change = 0;
+			}
+		}
 	}
 }
 
@@ -468,6 +487,8 @@ void fetch::topologicalCallback(const mapping_msgs::NodeList msg){
 		}
 		//nodes.push_back(tmpN);
 	}
+	posX = msg.list[goToNode].x;
+	posY = msg.list[goToNode].y;
 	/*for(int i=0;i<size;i++){
 		mapping_msgs::Node tmp = msg.list[i];
 		int son = tmp.links.size();
@@ -523,6 +544,8 @@ fetch::fetch(int argc, char *argv[]){
 	change=0;
 	scanState = 0;
 	runTime = 0;
+	goToNode = 4;
+	mapIsReady = 0;
 	
 	//init state machine
 	states[DONOTHING] = &fetch::donothing;
@@ -558,6 +581,12 @@ fetch::fetch(int argc, char *argv[]){
 	sub_sensor = handle.subscribe("/ir_sensors/dists", 1000, &fetch::sensorCallback, this);
 	pub_turning = handle.advertise<controller_msgs::Turning>("/controller/turn", 1000);
 	//sub_isTurning = handle.subscribe("/motor3/is_turning", 1, &fetch::isTurningCallback, this);
+	
+	//ros::spinOnce();
+	ROS_INFO("WTF");
+	
+	posX = 1.54133522511; 
+	posY = 0.66561293602;
 	
 	runNode();
 }
