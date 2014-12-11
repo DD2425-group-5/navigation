@@ -451,6 +451,42 @@ void fetch::isTurningCallback(const std_msgs::Bool msg){
 	ROS_INFO("GOT MESSAGE %d",msg.data);
 }
 
+
+
+void fetch::topologicalCallback(const mapping_msgs::NodeList msg){
+    mapIsReady=1;
+	map = msg;
+		
+	ROS_INFO("GOT A MAP");
+	
+	int size = msg.list.size();
+	//node nodes;
+	for(int i=0;i<size;i++){	//create nodes
+		mapping_msgs::Node tmp = msg.list[i];
+		if(tmp.object){
+			objects.push_back(tmp.label);
+		}
+		//nodes.push_back(tmpN);
+	}
+	/*for(int i=0;i<size;i++){
+		mapping_msgs::Node tmp = msg.list[i];
+		int son = tmp.links.size();
+		for(int j = 0 ;j < son;j++){
+			int ref = tmp.links[j];
+			nodes.at(i).addNode(nodes.at(ref));
+		}
+	}
+	currentNode = nodes.at(0);*/
+}
+
+
+void fetch::odometryCallback(const hardware_msgs::Odometry msg2){
+    absX = msg2.totalX;
+    absY = msg2.totalY;
+    theta = msg2.latestHeading;
+}
+
+
 /*sensor callback for getting distances*/
 void fetch::sensorCallback(const hardware_msgs::IRDists msg){
 	float tmp[] = {msg.s0,msg.s1,msg.s2,msg.s3,msg.s4,msg.s5};
@@ -510,6 +546,14 @@ fetch::fetch(int argc, char *argv[]){
 	//std::string motor_pub_topic;
     //ROSUtil::getParam(handle, "/topic_list/controller_topics/motor3/subscribed/twist_topic", motor_pub_topic);
 
+
+
+   //sub odometry
+    std::string odometry_pub_topic;
+    ROSUtil::getParam(handle, "/topic_list/hardware_topics/odometry/published/odometry_topic", odometry_pub_topic);
+    sub_odometry = handle.subscribe(odometry_pub_topic, 1000, &fetch::odometryCallback, this);
+
+    sub_map = handle.subscribe("/topological_map/map", 1000, &fetch::topologicalCallback, this);
 	pub_motor = handle.advertise<geometry_msgs::Twist>("/motor3/twist", 1000);
 	sub_sensor = handle.subscribe("/ir_sensors/dists", 1000, &fetch::sensorCallback, this);
 	pub_turning = handle.advertise<controller_msgs::Turning>("/controller/turn", 1000);

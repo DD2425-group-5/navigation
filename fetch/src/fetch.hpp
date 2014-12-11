@@ -3,9 +3,16 @@
 #include "hardware_msgs/IRDists.h"
 #include <rosutil/rosutil.hpp>
 #include <math.h>
+#include "hardware_msgs/Odometry.h"
 #include <sstream>
+#include <map>
+#include <vector> 
+#include <string>
 #include "controller_msgs/Turning.h"
 #include "std_msgs/Bool.h"
+#include "mapping_msgs/Node.h"
+#include "mapping_msgs/NodeList.h"
+
 
 #define DONOTHING			0
 #define FOLLOW_LEFT_WALL	1
@@ -50,12 +57,16 @@ public:
 
 private:
 	//variables
+    mapping_msgs::NodeList map;		//the top map
+	double absX;                    // Absolute value of X                    
+    double absY;                    // Absolute value of Y
+    double theta;                   // Heading, angular
 	float sensor[6];		//	latest sensor data
 	int started;			//	has all the nodes been started?
 	int timer;				//	for wait()
 	int hz;					//	operating frequency
 	double marchSpeed;		//	default run speed
-	
+	int mapIsReady;
 	double v;				//	velocity
 	double w;				//	angular turn
 	double y;				//	turn degrees
@@ -70,14 +81,19 @@ private:
 	int runTime;
 	//int change;				//for observing multiple changes in state
 	/**/
+	std::vector<std::string> objects;
 	
 	ros::Subscriber sub_sensor;	//sub to get distance values
 	ros::Publisher pub_motor;	//for the motor
 	ros::Publisher pub_turning; //for publishing when turning
 	ros::Subscriber sub_isTurning; //for finished turn published by motor controller
+	ros::Subscriber sub_odometry; 
+	ros::Subscriber sub_map;
 	
 	void runNode();										//main run node
 	void sensorCallback(const hardware_msgs::IRDists msg);	//for sensors
+	void odometryCallback(const hardware_msgs::Odometry msg2); //for odometry
+	void topologicalCallback(const mapping_msgs::NodeList msg);//for receiving map 
 	void pubTurn(float degrees);						//publish turn as rostopic
 	void isTurningCallback(const std_msgs::Bool msg);		//sub to finishedTurn
 	
